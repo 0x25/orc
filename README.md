@@ -1,5 +1,5 @@
 
-<center>![ORC](https://raw.githubusercontent.com/0x25/orc/main/orc.png)</center>
+![ORC](https://github.com/0x25/orc/blob/main/orc.png?raw=true)
 
 # Orc
 Orc is a tool write in python3 to run command line by block.
