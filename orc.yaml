@@ -1,0 +1,56 @@
+---
+#
+# YAML Config file for orc.py projet
+#
+
+vars:
+  - ip: 92.222.139.190
+  - website: www.csnovidys.com
+  - domains: 
+    - csnovidys.com
+    - novidys.com
+  - ips:
+    - 54.38.186.71
+    - 54.38.186.72
+  - folder: result
+  - protocols:
+    - http
+    - https
+
+blocks:
+  - block: 'create folders structure'
+    threads: 1
+    clis:
+      - 'mkdir -p {{folder}}/nmap'
+      - 'mkdir -p {{folder}}/nikto'
+      - 'mkdir -p {{folder}}/whois'
+      - 'mkdir -p {{folder}}/dns'
+
+  - block: 'Discover target'
+    threads: 4
+    clis: 
+      - cli: 'nslookup {{website}}'
+        out: '{{folder}}/dns/nslookup_{{website}}.log'
+      - cli : 'dig any +noall +answer {{website}} @8.8.8.8'
+        out: '{{folder}}/dns/dig_{{website}}.log'
+      - cli: 'host {{domains}}'
+        out: '{{folder}}/dns/host_{{domains}}.log'
+      - cli: 'whois {{domains}}'
+        out: '{{folder}}/whois/whois_{{domains}}.log'
+
+  - block: 'Fast nmap discover (top 100)'
+    threads: 2
+    clis: 
+      - 'nmap -v0 --open -Pn -n -F -sC -sV -T5 -oA {{folder}}/nmap/fast_{{ips}} {{ips}}'
+
+  - block: 'Normal nmap discover (top 1000) and nikto'
+    threads: 4
+    clis: 
+      - 'nmap -v0 --open -Pn -n -sC -sV -T5 -oA {{folder}}/nmap/normal_{{ips}} {{ips}}'
+      #- 'nikto -maxtime 20m -nointeractive -host {{protocols}}://{{website}} -output {{folder}}/nikto/{{protocols}}_{{website}}.log -Format txt'
+      - 'python3 tools/nmaptocsv.py -x result/nmap/fast_{{ips}}.xml -o result/nmap/fast_{{ips}}.csv'
+
+#  - block: 'name'
+#    cli:
+#      - ''
+
