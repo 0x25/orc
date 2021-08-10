@@ -38,15 +38,17 @@ Each block contain a *block* name, and *clis* (command to run) and optionally *t
 
 clis is a list a command. each command can be write in 2 ways:
 
-  clis:
-    - 'my command 1 {{myvalue}}'
-    - ...
+    clis:
+      - 'my command 1 {{myvalue}}'
+      - ...
+    
 Run the command only
 
-  clis:
-    - cli: 'my command 1'
-      out: 'name of logfile'
-    - ...
+    clis:
+      - cli: 'my command 1'
+        out: 'name of logfile'
+      - ...
+    
 Run the command and save the stdout to the out file.
 You can mix both type in clis.
 
