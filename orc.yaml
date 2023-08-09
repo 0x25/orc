@@ -3,10 +3,15 @@
 # YAML Config file for orc.py projet
 #
 
+files:
+  - iplist: iplist.txt
+  - domainlist: domlist.txt
+  - domains: domlist.txt
+
 vars:
   - ip: 192.168.1.1
   - website: www.yourdomain.com
-  - domains: 
+  - domains:
     - domain1.com
     - domain2.com
   - ips:

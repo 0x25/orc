@@ -14,13 +14,16 @@ The script read a [yaml](https://en.wikipedia.org/wiki/YAML) file to retreive va
 
     optional arguments:
       -h, --help                  Show this help message and exit
-      -t THREAD, --thread THREAD  Number of default concurent thread in block if not set
+      -t THREAD, --thread THREAD  Number of default concurent thread in block if not set [4]
       -c CONF, --conf CONF        YAML config file, default name is [orc.yaml]
 
 ## Variables
 A templating mecanisme is used to replace variables in commands. A variable can be a simple value or a list of value.
 
 <u>Example of variables configuration:</u>
+
+    files:
+      - iplist: myfile.txt
 
     vars:
       - myvalue: somedata
@@ -31,6 +34,18 @@ A templating mecanisme is used to replace variables in commands. A variable can 
 ## Template
 Each name of variable can be use in commands.
 For example '**myvalue**' can be used with the **{{myvalue}}** representation in the command.
+
+There is to type:
+ - vars 
+ - files
+
+files and vars parameters name must be unique.
+
+### vars
+This is local variables in the yaml file (value or list).
+
+### files
+The value of the variable is locate in a file line by line. 
 
 ## Blocks
 Blocks is a list of block.
@@ -60,6 +75,9 @@ You can mix both type in clis.
 #
 # YAML Config example
 #
+
+file:
+  - iplist: iplist.txt
 
 vars:
   - ip: 192.168.1.10

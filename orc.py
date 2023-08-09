@@ -4,14 +4,14 @@
 
 """
 author: Ox25
-date: 08/04/2021
+date: 09/08/2023
 description: run parallel tasks by block with multithreads
 
 /////// //////// ///////
 //   // //   //  //   //
 //   // //////        //
 //   // //   //  //   //
-/////// //   /// /////// V0.9 
+/////// //   /// /////// V1.0
 """
 
 from yaml.loader import SafeLoader
@@ -97,6 +97,21 @@ def blockCmd(job):
   
   p.wait()
 
+def files_to_vars(files):
+  ''' extract vars from files'''
+  tmpdct = []
+  for item in files:
+    var = list(item.keys())[0]
+    file = item[var]
+    tmplst = {}
+    if os.path.isfile(file):
+      with open(file,'r') as f:
+        tmplst[var] = f.read().splitlines()
+        tmpdct.append(tmplst)
+    else:
+      sys.exit('ERROR : no file/wrong path for files ' + file)
+
+  return tmpdct
 
 def main():
   """ main code """
@@ -111,7 +126,7 @@ def main():
     print(f"\033[1;32mStart ORC with default parameters : yaml file [{default_config_name}] and thread [{default_thread}]. Use -h to show help.\033[0m\n")
 
   parser = argparse.ArgumentParser(description=description, epilog=epilog)
-  parser.add_argument('-t','--thread', type=int, default=default_thread, help='Number of default concurent thread in block if not set')
+  parser.add_argument('-t','--thread', type=int, default=default_thread, help='Number of default concurent thread in block if not set [4]')
   parser.add_argument('-c','--conf', default=default_config_name, help='YAML config file, default name is [orc.yaml]')
   args = parser.parse_args()
 
@@ -122,7 +137,10 @@ def main():
   config_datas = load_yaml_config(yaml_file)
 
   variables = config_datas['vars']
+  files = config_datas['files']
   blocks = config_datas['blocks']
+
+  variables += files_to_vars(files)
 
   for block in blocks:
     block_name = block['block']

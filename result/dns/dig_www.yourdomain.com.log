@@ -1,0 +1,6 @@
+www.yourdomain.com.	21600	IN	NS	ns1.sedoparking.com.
+www.yourdomain.com.	21600	IN	NS	ns2.sedoparking.com.
+www.yourdomain.com.	3600	IN	MX	0 localhost.
+www.yourdomain.com.	3600	IN	TXT	"v=spf1 -all"
+www.yourdomain.com.	300	IN	A	64.190.63.111
+www.yourdomain.com.	21600	IN	SOA	ns1.sedoparking.com. hostmaster.sedo.de. 2018051601 86400 10800 604800 86400
