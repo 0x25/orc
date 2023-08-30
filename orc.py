@@ -11,7 +11,7 @@ description: run parallel tasks by block with multithreads
 //   // //   //  //   //
 //   // //////        //
 //   // //   //  //   //
-/////// //   /// /////// V1.0
+/////// //   /// /////// V1.1
 """
 
 from yaml.loader import SafeLoader
@@ -142,6 +142,26 @@ def main():
 
   variables += files_to_vars(files)
 
+  _final = {}
+  for elem in variables:
+    for key, value in elem.items():
+      _final[key] = [] if key not in _final.keys() else list(_final[key])
+      if isinstance(value, list):
+        for item in value:
+          _final.setdefault(key, []).append(item)
+      else:
+        _final.setdefault(key, []).append(value)
+      _final[key] = list(set(_final[key]))
+  
+  all_variables = []
+  for key,value in _final.items():
+    t = {}
+    if len(value) > 1:
+      t[key] = value
+    else:
+      t[key] = value[0]
+    all_variables.append(t)
+
   for block in blocks:
     block_name = block['block']
     if block['threads']:
@@ -150,7 +170,7 @@ def main():
       block_threads = default_thread
     
     print(f"\033[0;34m--Block [{block_name}]\033[0m")
-    clis = format_clis(variables,block)
+    clis = format_clis(all_variables,block)
     #print(clis)
     jobs = []
 
