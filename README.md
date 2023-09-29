@@ -39,7 +39,7 @@ There is to type:
  - vars 
  - files
 
-files and vars parameters name must be unique.
+'files' and 'vars' parameters are merged if they have the same name.
 
 ### vars
 This is local variables in the yaml file (value or list).
