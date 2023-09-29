@@ -104,6 +104,7 @@ blocks:
 
   - block: 'Discover target'
     threads: 4
+    enable: 'False'
     clis: 
       - cli: 'nslookup {{website}}'
         out: '{{folder}}/dns/nslookup_{{website}}.log'
@@ -130,6 +131,9 @@ blocks:
 #    cli:
 #      - ''
 ```    
+
+You can disable a block with the yaml tag 
+ - enable: 'False'
     
 ## To do
 
