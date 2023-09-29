@@ -4,14 +4,14 @@
 
 """
 author: Ox25
-date: 09/08/2023
-description: run parallel tasks by block with multithreads
+date: 29/09/2023
+description: run parallel tasks by block with multithreads and variables auto completion
 
 /////// //////// ///////
 //   // //   //  //   //
 //   // //////        //
 //   // //   //  //   //
-/////// //   /// /////// V1.1
+/////// //   /// /////// V1.2
 """
 
 from yaml.loader import SafeLoader
@@ -30,7 +30,6 @@ def load_yaml_config(file):
       return data
   else:
     sys.exit('ERROR : no file/wrong path')
-
 
 def replace_clis(str_list,datas):
   """ Generate all possible cmd with a command string and the dict of item to replace """
@@ -118,7 +117,8 @@ def main():
 
   default_thread = 4
   default_config_name = 'orc.yaml'
-
+  default_enable = 'True'
+  
   description = "\033[1;32m Run tasks by blocks with multitreads \033[0m"
   epilog = "\033[0;35m $$ XMR 4Ahnr36hZQsJ3P6jowXvs7cLkSVbkq2KyfQBVURYVftcj9tDoA592wT1jskroZEk2QDEZFPYMLqVvJWZHecFwQ9nL15SzRG\033[0m"
 
@@ -164,12 +164,22 @@ def main():
 
   for block in blocks:
     block_name = block['block']
-    if block['threads']:
+
+    if 'enable' in block:
+      block_enable = block['enable']
+    else:
+      block_enable = default_enable
+    
+    if 'threads' in block:
       block_threads = block['threads']
     else:
       block_threads = default_thread
     
     print(f"\033[0;34m--Block [{block_name}]\033[0m")
+    if block_enable != 'True':
+      print(f"    \033[0;31mblock disable\033[0m")
+      continue # back to for loop
+
     clis = format_clis(all_variables,block)
     #print(clis)
     jobs = []
