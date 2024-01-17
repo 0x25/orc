@@ -11,7 +11,7 @@ description: run parallel tasks by block with multithreads and variables auto co
 //   // //   //  //   //
 //   // //////        //
 //   // //   //  //   //
-/////// //   /// /////// V1.2
+/////// //   /// /////// V1.3
 """
 
 from yaml.loader import SafeLoader
@@ -140,7 +140,8 @@ def main():
   files = config_datas['files']
   blocks = config_datas['blocks']
 
-  variables += files_to_vars(files)
+  if files is not None:
+    variables += files_to_vars(files)
 
   _final = {}
   for elem in variables:
