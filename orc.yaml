@@ -17,7 +17,7 @@ vars:
   - ips:
     - 11.11.11.11
     - 11.11.11.12
-  - folder: result
+  - folder: result:datePrefix
   - protocols:
     - http
     - https
@@ -35,18 +35,18 @@ blocks:
     threads: 4
     clis: 
       - cli: 'nslookup {{website}}'
-        out: '{{folder}}/dns/nslookup_{{website}}.log'
-      - cli : 'dig any +noall +answer {{website}} @8.8.8.8'
-        out: '{{folder}}/dns/dig_{{website}}.log'
+        out: '{{folder}}/dns/nslookup_{{website:lower}}.log'
+      - cli : 'dig any +noall +answer {{website:lower}} @8.8.8.8'
+        out: '{{folder}}/dns/dig_{{website:lower}}.log'
       - cli: 'host {{domains}}'
-        out: '{{folder}}/dns/host_{{domains}}.log'
+        out: '{{folder}}/dns/host_{{domains:lower}}.log'
       - cli: 'whois {{domains}}'
-        out: '{{folder}}/whois/whois_{{domains}}.log'
+        out: '{{folder}}/whois/whois_{{domains:lower}}.log'
 
   - block: 'Fast nmap discover (top 100)'
     threads: 2
     clis: 
-      - 'nmap -v0 --open -Pn -n -F -sC -sV -T5 -oA {{folder}}/nmap/fast_{{ips}} {{ips}}'
+      - 'nmap -v0 --open -Pn -n -F -sC -sV -T5 -oA {{folder}}/nmap/fast_{{ips:replace(/,_)}} {{ips}}'
 
   - block: 'Normal nmap discover (top 1000) and nikto'
     threads: 4
