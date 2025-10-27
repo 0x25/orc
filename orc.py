@@ -5,13 +5,40 @@
 """
 author: Ox25
 date: 29/09/2023
-description: run parallel tasks by block with multithreads and variables auto completion
+update: 24/10/2025
+description: run parallel tasks by block with multithreads and variables auto completion with low CPU/memory usage ;)
 
 /////// //////// ///////
 //   // //   //  //   //
 //   // //////        //
 //   // //   //  //   //
-/////// //   /// /////// V1.3
+/////// //   /// /////// V2
+
+
+EXAMPLE of config.yaml
+
+files:
+  - file: liste.txt
+
+vars:
+  - folder: Result:datePrefix
+  - test: toto
+  - protocols:
+    - HTtp
+    - https
+    - test/12
+
+blocks:
+  - block: 'create folders structure'
+    threads: 1
+    clis:
+      - 'mkdir -p {{folder:lower}}/nmap'
+      - 'mkdir -p {{folder:lower}}/{{protocols:lower:replace(/,_)}}'
+
+blocks:
+  - block: 'second block'
+  ...
+
 """
 
 from yaml.loader import SafeLoader
@@ -19,10 +46,16 @@ import os.path
 import sys, argparse, yaml, re
 from multiprocessing import Pool
 import shlex, subprocess
+import re
+import random
+import string
+import datetime
 
 
 def load_yaml_config(file):
-  """Load YAML file configuration and returns a Python object"""
+  """
+    Load YAML file configuration and returns a Python object
+  """
 
   if os.path.isfile(file):
     with open(file) as f:
@@ -31,9 +64,127 @@ def load_yaml_config(file):
   else:
     sys.exit('ERROR : no file/wrong path')
 
-def replace_clis(str_list,datas):
-  """ Generate all possible cmd with a command string and the dict of item to replace """
+def is_match(key,cli,values):
+  """
+    Search if key have function like myVar:upper:randPrefix(8,_) or juste myVar
+  """
+  out = {'key':'','handle':'','values':''}
+  if cli.find('{{' + key + '}}') != -1:
+    out['key'] = key
+    out['handle'] = ''
+    out['values'] = values
 
+  else:
+    pattern = r"{{(" + key + "):(.*?)}}"
+    res = re.search(pattern,cli)
+    if res:
+      out['key'] = res.group(1)
+      out['handle'] = res.group(2)
+      out['values'] = handle_match(res.group(2),values)
+
+  return out
+
+def handle_match(handle,values):
+  """
+    run all functions concatenate to a var. Multiple function can be set lower:randSuffix(4)
+    function:
+      replace(a,b)
+      upper
+      lower
+      prefix(value)
+      suffix(value)
+      randSuffix(len)
+      randSuffix(len,sep)
+      randPrefix(len)
+      randPrefix(len,sep)
+      dateSuffix
+      datePrefix
+  """
+  
+  handles = handle.split(':')
+  pattern = r"(\w+)(\(([^)]*)\)){0,1}" # function
+  if isinstance(values,list):
+    return values
+  else:
+    tvalue = values
+    for function in handles:
+      functionInfo = re.search(pattern,function)
+      
+      functionName = functionInfo.group(1)
+      functionArgs = functionInfo.group(3)
+      if functionArgs is None:
+        functionArgs = ''
+      else:
+        functionArgs = functionArgs.split(',')
+      
+      # place to declare function in filter 
+      # replace(a,b)
+      if functionName == 'replace' and len(functionArgs) == 2 :
+        
+        tvalue = tvalue.replace(functionArgs[0],functionArgs[1])
+      
+      # upper
+      elif functionName == 'upper':
+        tvalue = tvalue.upper()
+      
+      # lower
+      elif functionName == 'lower':
+        tvalue = tvalue.lower()
+      
+      # prefix(value)
+      elif functionName == 'prefix' and len(functionArgs) == 1:
+        tvalue = functionArgs[0] + tvalue
+      
+      #suffix(value)
+      elif functionName == 'suffix' and len(functionArgs) == 1:
+        tvalue = tvalue + functionArgs[0]
+        
+      #randSuffix(len)
+      elif functionName == 'randSuffix' and len(functionArgs) == 1:
+        length = int(functionArgs[0])
+        tvalue = ''.join(random.choices(string.ascii_letters + string.digits, k=length)) + tvalue
+
+      #randSuffix(len,sep)
+      elif functionName == 'randSuffix' and len(functionArgs) == 2:
+        length = int(functionArgs[0] )
+        tvalue = ''.join(random.choices(string.ascii_letters + string.digits, k=length)) + functionArgs[1] + tvalue
+
+      #randPrefix(len)
+      elif functionName == 'randPrefix' and len(functionArgs) == 1:
+        length = int(functionArgs[0])
+        tvalue = tvalue + ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+      #randPrefix(len,sep)
+      elif functionName == 'randPrefix' and len(functionArgs) == 2:
+        length = int(functionArgs[0])
+        tvalue = tvalue + functionArgs[1] + ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+      
+      # dateSuffix
+      elif functionName == 'dateSuffix':
+        now = datetime.datetime.now()
+        format_string = "%Y_%m_%d_%Hh%Mm%S"
+        dateName = now.strftime(format_string)
+        tvalue = dateName + "_" + tvalue
+        
+      # datePrefix
+      elif functionName == 'datePrefix':
+        now = datetime.datetime.now()
+        format_string = "%Y_%m_%d_%Hh%Mm%S"
+        dateName = now.strftime(format_string)
+        tvalue = tvalue + "_" + dateName
+        
+      else:
+        tvalue = tvalue
+          
+      tvalues = tvalue
+      
+    return tvalues
+
+
+def replace_clis(str_list,datas):
+  """
+    Generate all possible cmd recursively
+  """
   if not isinstance(str_list,list) : str_list = [str_list]
   for data in datas:
     key = list(data.keys())[0]
@@ -43,23 +194,32 @@ def replace_clis(str_list,datas):
       # list
       str_tmp = []
       for k,str in enumerate(str_list):
-        if str.find('{{' + key + '}}') != -1:
-          for value in values:
+        res = is_match(key,str,values)
+        
+        if 'values' in res and res['values'] != '':
+          for value in res['values']:
             item = {}
-            item[key] = value
+            item[res['key']] = value
             str_tmp = str_tmp + replace_clis([str],[item])
           str_list = str_tmp
     else:
       # str
       for k,str in enumerate(str_list):
-        if str.find('{{' + key + '}}') != -1:
-          str_list[k] = str.replace('{{'+key+'}}',values)
+        res = is_match(key,str,values)
+        
+        tkey = res['key']
+        if 'handle' in res and res['handle'] != '':
+           tkey = tkey + ':' +res['handle']
+        if res is not None:
+          str_list[k] = str.replace('{{'+ tkey +'}}',res['values'])
 
   return str_list
 
 
 def format_clis(vars,block):
-  """ format all command and return a list"""
+  """
+    Format all command and return a list
+  """
 
   clis = block['clis']
   clis_formated = []
@@ -67,23 +227,23 @@ def format_clis(vars,block):
   for cli in clis:
     if isinstance(cli,dict):
       clis_formated = clis_formated + replace_clis(cli['cli'],vars)
-      #print(clis_formated)
       outs_formated = outs_formated + replace_clis(cli['out'],vars)
-      #print(outs_formated)
     else:
       clis_tmp = replace_clis(cli,vars)
       clis_formated = clis_formated + clis_tmp
-      #print(f" out {clis_formated}")
       outs_formated = outs_formated + [False]*len(clis_tmp)
-      #print(outs_formated)
 
   return {'clis':clis_formated, 'out':outs_formated}
 
 def blockCmd(job):
-  ''' Task to run the cli'''
+  """ 
+    Task (block) to run the cli
+  """
+  
   pid = os.getpid()
   cli = job['cli']
   log = job['log']
+  
   print(f"   [{pid}] Task cli [{cli}] log [{log}]")
 
   args = shlex.split(cli)
@@ -91,13 +251,15 @@ def blockCmd(job):
     print(f"    \033[0;32m[{pid}] Log outpput to file: [{log}]\033[0m")
     p = subprocess.Popen(args,stdout=open(log,'a'))
   else:
-    #p = subprocess.Popen(args,stdout=subprocess.PIPE)
     p = subprocess.Popen(args,stdout=open('/dev/null', 'w'))
   
   p.wait()
 
 def files_to_vars(files):
-  ''' extract vars from files'''
+  """
+    Extract vars from files to merge with vars
+  """
+  
   tmpdct = []
   for item in files:
     var = list(item.keys())[0]
@@ -136,9 +298,20 @@ def main():
   print(f"\033[0;33m-Load yaml file [{yaml_file}]\033[0m")
   config_datas = load_yaml_config(yaml_file)
 
-  variables = config_datas['vars']
-  files = config_datas['files']
-  blocks = config_datas['blocks']
+  if 'vars' in config_datas:
+    variables = config_datas['vars']
+  else:
+    variables = []
+
+  if 'files' in config_datas:
+    files = config_datas['files']
+  else:
+    files = []
+    
+  if 'blocks' not in config_datas:
+    sys.exit("Error: Need blocks")
+  else:
+    blocks = config_datas['blocks']
 
   if files is not None:
     variables += files_to_vars(files)
@@ -160,9 +333,14 @@ def main():
     if len(value) > 1:
       t[key] = value
     else:
-      t[key] = value[0]
+      datas = value[0].split(":",1)
+      if len(datas) > 1:
+        res = handle_match(value[0],datas[0])
+        t[key] = [res]
+      else:
+        t[key] = value
     all_variables.append(t)
-
+  
   for block in blocks:
     block_name = block['block']
 
@@ -182,10 +360,11 @@ def main():
       continue # back to for loop
 
     clis = format_clis(all_variables,block)
-    #print(clis)
+
     jobs = []
 
     for key,cli in enumerate(clis['clis']):
+      #print(f"cli {cli} key {key}")
       jobs.append({'cli':cli,'log':clis['out'][key]})
 
     p = Pool(block_threads)
@@ -195,4 +374,4 @@ def main():
 
 # main
 if __name__ == '__main__':
-        main()
+  main()
