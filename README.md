@@ -179,8 +179,7 @@ You can disable a block with the yaml tag
  - Add your pull request \o/
  - ...
 
-## Or you can use Celery  
 
-https://github.com/celery/celery
+
 
 
