@@ -47,6 +47,39 @@ This is local variables in the yaml file (value or list).
 ### files
 The value of the variable is locate in a file line by line. 
 
+## Functions
+It is possible to add prefix on variables ta do some actions on values. It ca be donne on vars (without list) and in CLI.
+
+Example:
+
+    vars:
+      - folder: Result:datePrefix
+      - test: toto
+      - protocols:
+        - HTtp
+        - https
+        - test/12
+    
+    blocks:
+      - block: 'create folders structure'
+        threads: 1
+        clis:
+          - 'mkdir -p {{folder:lower}}/nmap'
+          - 'mkdir -p {{folder:lower}}/{{protocols:replace(/,_)}}'
+
+List of prefix
+- replace(a,b)
+- upper
+- lower
+- prefix(value)
+- suffix(value)
+- randSuffix(len)
+- randSuffix(len,sep)
+- randPrefix(len)
+- randPrefix(len,sep)
+- dateSuffix
+- datePrefix
+
 ## Blocks
 Blocks is a list of block.
 Each block contain a *block* name, and *clis* (command to run) and optionally *threads* (number of threads to use to run this block).
@@ -149,4 +182,5 @@ You can disable a block with the yaml tag
 ## Or you can use Celery  
 
 https://github.com/celery/celery
+
 
