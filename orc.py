@@ -5,14 +5,14 @@
 """
 author: Ox25
 date: 29/09/2023
-update: 24/10/2025
+update: 29/10/2025
 description: run parallel tasks by block with multithreads and variables auto completion with low CPU/memory usage ;)
 
 /////// //////// ///////
 //   // //   //  //   //
 //   // //////        //
 //   // //   //  //   //
-/////// //   /// /////// V2
+/////// //   /// /////// V2.1
 
 
 EXAMPLE of config.yaml
@@ -220,16 +220,50 @@ def format_clis(vars,block):
   """
     Format all command and return a list
   """
-
+  
   clis = block['clis']
   clis_formated = []
   outs_formated = []
   for cli in clis:
     if isinstance(cli,dict):
-      clis_formated = clis_formated + replace_clis(cli['cli'],vars)
-      outs_formated = outs_formated + replace_clis(cli['out'],vars)
+      cmd = cli['cli']
+      out = cli['out']
+      clis_len = 0
+      clis_tmp = replace_clis(cmd,vars)
+      replace = True
+      while replace :
+        clis_tmp = replace_clis(clis_tmp,vars)
+        tmp_len = len(clis_tmp)
+        print(f"clis_len {clis_len} tmp_len {tmp_len}")
+        if clis_len == tmp_len:
+          replace = False
+        clis_len = tmp_len
+
+      out_len = 0
+      out_tmp = replace_clis(out,vars)
+      replace = True
+      while replace :
+        out_tmp = replace_clis(out_tmp,vars)
+        tmp_len = len(out_tmp)
+        print(f"out_len {out_len} tmp_len {tmp_len}")
+        if out_len == tmp_len:
+          replace = False
+        out_len = tmp_len
+
+      clis_formated = clis_formated + clis_tmp
+      outs_formated = outs_formated + out_tmp
     else:
+      clis_len = 0
       clis_tmp = replace_clis(cli,vars)
+      replace = True
+      while replace :
+        clis_tmp = replace_clis(clis_tmp,vars)
+        tmp_len = len(clis_tmp)
+        print(f"clis_len {clis_len} tmp_len {tmp_len}")
+        if clis_len == tmp_len:
+          replace = False
+        clis_len = tmp_len
+
       clis_formated = clis_formated + clis_tmp
       outs_formated = outs_formated + [False]*len(clis_tmp)
 
@@ -348,7 +382,7 @@ def main():
       block_enable = block['enable']
     else:
       block_enable = default_enable
-    
+
     if 'threads' in block:
       block_threads = block['threads']
     else:
@@ -363,8 +397,10 @@ def main():
 
     jobs = []
 
+    print(clis)
     for key,cli in enumerate(clis['clis']):
-      #print(f"cli {cli} key {key}")
+      print(f"cli {cli} key {key}")
+      print(f"clis out {clis['out']}")
       jobs.append({'cli':cli,'log':clis['out'][key]})
 
     p = Pool(block_threads)
