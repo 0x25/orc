@@ -234,7 +234,7 @@ def format_clis(vars,block):
       while replace :
         clis_tmp = replace_clis(clis_tmp,vars)
         tmp_len = len(clis_tmp)
-        print(f"clis_len {clis_len} tmp_len {tmp_len}")
+
         if clis_len == tmp_len:
           replace = False
         clis_len = tmp_len
@@ -245,7 +245,7 @@ def format_clis(vars,block):
       while replace :
         out_tmp = replace_clis(out_tmp,vars)
         tmp_len = len(out_tmp)
-        print(f"out_len {out_len} tmp_len {tmp_len}")
+
         if out_len == tmp_len:
           replace = False
         out_len = tmp_len
@@ -259,7 +259,7 @@ def format_clis(vars,block):
       while replace :
         clis_tmp = replace_clis(clis_tmp,vars)
         tmp_len = len(clis_tmp)
-        print(f"clis_len {clis_len} tmp_len {tmp_len}")
+
         if clis_len == tmp_len:
           replace = False
         clis_len = tmp_len
@@ -397,10 +397,8 @@ def main():
 
     jobs = []
 
-    print(clis)
+
     for key,cli in enumerate(clis['clis']):
-      print(f"cli {cli} key {key}")
-      print(f"clis out {clis['out']}")
       jobs.append({'cli':cli,'log':clis['out'][key]})
 
     p = Pool(block_threads)
